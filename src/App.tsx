@@ -8,7 +8,6 @@ function App() {
     const [maxGroups, setMaxGroups] = useState<number>(25);
     const [tables, setTables] = useState<number>(16);
     const [menu, setMenu] = useState<number>(20);
-    const [button, setButton] = useState(false);
     const [buttons, setButtons] = useState(0);
 
     const send_info = async () => {
