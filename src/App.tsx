@@ -11,10 +11,14 @@ function App() {
     const [buttons, setButtons] = useState(0);
     const [arrivals, setArrivals] = useState<Array<number>>([])
     const [orders, setOrders] = useState<Array<{ estado: string, id: number, ordenes: Array<{ id_cliente: number, nombre: string, platos: Array<number> }> }>>([])
-    const [eat, setEat] = useState<Array<{ id_mesa: number, id_encargado: number, metodo_pago: string, hora: string, valor: number, clientes: Array<{ id_cliente: number, nombre: string, platos: Array<number> }> }>>([])
-    const [invoices, setInvoices] = useState<Array<{ id_mesa: number, id_encargado: number, metodo_pago: string, hora: string, valor: number, clientes: Array<{ id_cliente: number, nombre: string, platos: Array<number> }> }>>([])
+    const [eat, setEat] = useState<Array<{ tiempo: number, id_encargado: number, metodo_pago: string, hora: string, clientes: Array<{ id_cliente: number, nombre: string, platos: Array<number> }> }>>([])
+    const [invoices, setInvoices] = useState<Array<{ id_encargado: number, id_mesa: number, metodo_pago: string, hora: string, valor: number, clientes: Array<{ id_cliente: number, nombre: string, platos: Array<number> }> }>>([])
     const [info, setInfo] = useState<boolean>(false)
     const [loading, setLoading] = useState<boolean>(false)
+    const [buttonOrders, setButtonOrders] = useState(false);
+    const [buttonEat, setButtonEat] = useState(false);
+    const [buttonInvoice, setButtonInvoice] = useState(false);
+    const [modal, setModal] = useState("");
 
     const send_info = async () => {
         const requestOptions = {
@@ -28,8 +32,7 @@ function App() {
             })
         };
         const response = await fetch('https://agente-cliente.herokuapp.com/datos-iniciales', requestOptions)
-        const res = await response.json();
-        console.log(res)
+        await response.json();
         const get_1 = await fetch('https://agente-cliente.herokuapp.com/clientes/llegada')
         const get_2 = await fetch('https://agente-cliente.herokuapp.com/clientes/orden')
         const get_3 = await fetch('https://agente-cliente.herokuapp.com/clientes/comer')
@@ -54,6 +57,22 @@ function App() {
         }
     }
 
+    const onClickEat = () => {
+        setButtonEat(true)
+        setModal("is-active")
+    }
+
+    const onClickButtonInvoice = () => {
+        setButtonInvoice(true)
+        setModal("is-active")
+    }
+
+    const onClickButtonOrders = () => {
+        setButtonOrders(true)
+        setModal("is-active")
+    }
+
+
     return (
         <div className="App">
             <nav className="navbar tile is-parent box" role="navigation" aria-label="main navigation">
@@ -67,7 +86,7 @@ function App() {
                 <div className="tile is-parent is-vertical">
                     <article className="tile is-child notification is-primary">
                         <p>En la siguiente aplicación se muestra una simulación de un agente que hace parte de otra
-                            aplicación grande de multiagentes e una simulación multiagentes de un restaurante</p>
+                            aplicación grande de multiagentes de una simulación multiagentes de un restaurante</p>
                     </article>
                     <div className="container tile is-parent content is-text is-multiline">
                         <article className="tile is-child notification is-success">
@@ -81,13 +100,15 @@ function App() {
                         </article>
                     </div>
                     <div className="tile is-child buttons">
-                        <button className={loading?"button is-primary button is-loading":"button is-primary"} onClick={() => {
-                            setLoading(true)
-                            send_info();
-                            changeButton(1)
-                        }}>Iniciar
+                        <button className={loading ? "button is-primary button is-loading" : "button is-primary"}
+                                onClick={() => {
+                                    setLoading(true)
+                                    send_info();
+                                    changeButton(1)
+                                }}>Iniciar
                         </button>
-                        <button className="button is-link" onClick={() => changeButton(2)} disabled={loading}>Modificar Tiempos
+                        <button className="button is-link" onClick={() => changeButton(2)} disabled={loading}>Modificar
+                            Tiempos
                         </button>
                     </div>
                 </div>
@@ -173,16 +194,211 @@ function App() {
                         <div className="container tile is-parent content is-text is-multiline">
                             <article className="tile is-child notification is-link">
                                 <ol>
-                                    <ul>Llegaron {arrivals.length} grupos de personas.</ul>
+                                    <ul>Llegaron {arrivals.length} grupos de personas, los grupos se organizan de la
+                                        siguiente manera: {arrivals.map(group => {
+                                            return `\n Un grupo de ${group} personas`
+                                        })}</ul>
                                     <ul>Hay {orders.length} pedidos.</ul>
-                                    <ul>Llegaron {eat.length} grupos de personas.</ul>
-                                    <ul>Llegaron {invoices.length} grupos de personas.</ul>
                                 </ol>
+                                <div className="container buttons tile is-child">
+                                    <button className="button is-info" onClick={() => onClickButtonOrders()}>Pedidos
+                                    </button>
+                                    <button className="button is-success" onClick={() => onClickEat()}>Tiempo de
+                                        comida
+                                    </button>
+                                    <button className="button is-warning" onClick={() => onClickButtonInvoice()}>Pagos
+                                    </button>
+                                </div>
                             </article>
                         </div>
                     </div>
                 }
             </div>
+            {
+                buttonOrders && <div className={`modal ${modal}`}>
+                    <div className="modal-background"/>
+                    <div className="modal-card">
+                        <header className="modal-card-head">
+                            <p className="modal-card-title">Pedido</p>
+                            <button className="delete" aria-label="close" onClick={() => {
+                                setModal("");
+                                setButtonOrders(false)
+                            }}/>
+                        </header>
+                        <section className="modal-card-body">
+                            <table className="table">
+                                <thead>
+                                <tr>
+                                    <th><abbr title="id">Id Pedido</abbr></th>
+                                    <th><abbr title="status">Estado</abbr></th>
+                                    <th><abbr title="client">Cliente</abbr></th>
+                                    <th><abbr title="food">Platos</abbr></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {
+                                    orders.map((order) => {
+                                        const nodes: React.ReactNode[] = []
+                                        if (order.ordenes.length === 1) {
+                                            nodes.push(<tr>
+                                                <td>{order.id}</td>
+                                                <td>{order.estado}</td>
+                                                <td>{order.ordenes[0].nombre}</td>
+                                                <td>{order.ordenes[0].platos.toString()}</td>
+                                            </tr>)
+                                        } else {
+                                            nodes.push(<tr>
+                                                <td rowSpan={order.ordenes.length + 1}>{order.id}</td>
+                                                <td rowSpan={order.ordenes.length + 1}>{order.estado}</td>
+                                                <td>{order.ordenes[0].nombre}</td>
+                                                <td>{order.ordenes[0].platos.toString()}</td>
+                                            </tr>)
+                                            order.ordenes.forEach(order_1 => {
+                                                nodes.push(<tr>
+                                                    <td>{order_1.nombre}</td>
+                                                    <td>{order_1.platos.toString()}</td>
+                                                </tr>)
+                                            })
+                                        }
+                                        return nodes
+                                    })
+                                }
+                                </tbody>
+                            </table>
+                        </section>
+                    </div>
+                    <button className="modal-close is-large" aria-label="close"
+                            onClick={() => {
+                                setModal("");
+                                setButtonOrders(false)
+                            }}/>
+                </div>
+            }
+            {
+                buttonInvoice && <div className={`modal ${modal}`}>
+                    <div className="modal-background"/>
+                    <div className="modal-card">
+                        <header className="modal-card-head">
+                            <p className="modal-card-title">Facturas</p>
+                            <button className="delete" aria-label="close" onClick={() => {
+                                setModal("");
+                                setButtonInvoice(false)
+                            }}/>
+                        </header>
+                        <section className="modal-card-body">
+                            <table className="table">
+                                <thead>
+                                <tr>
+                                    <th><abbr title="at">Encargado</abbr></th>
+                                    <th><abbr title="start">Mesa</abbr></th>
+                                    <th><abbr title="et">Método de Pago</abbr></th>
+                                    <th><abbr title="exit">Valor</abbr></th>
+                                    <th><abbr title="wt">Cliente</abbr></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {
+                                    invoices.map((order) => {
+                                        const nodes: React.ReactNode[] = []
+                                        if (order.clientes.length === 1) {
+                                            nodes.push(<tr>
+                                                <td>{order.id_encargado}</td>
+                                                <td>{order.id_mesa}</td>
+                                                <td>{order.metodo_pago}</td>
+                                                <td>{order.valor}</td>
+                                                <td>{order.clientes[0].nombre}</td>
+                                            </tr>)
+                                        } else {
+                                            nodes.push(<tr>
+                                                <td rowSpan={order.clientes.length + 1}>{order.id_encargado}</td>
+                                                <td rowSpan={order.clientes.length + 1}>{order.id_mesa}</td>
+                                                <td rowSpan={order.clientes.length + 1}>{order.metodo_pago}</td>
+                                                <td rowSpan={order.clientes.length + 1}>{order.valor}</td>
+                                                <td>{order.clientes[0].nombre}</td>
+                                            </tr>)
+                                            order.clientes.forEach(cliente => {
+                                                nodes.push(<tr>
+                                                    <td>{cliente.nombre}</td>
+                                                </tr>)
+                                            })
+                                        }
+                                        return nodes
+                                    })
+                                }
+                                </tbody>
+                            </table>
+                            *Cuando aparece un valor negativo, es porque aún no llega a la estación
+                            del proceso
+                        </section>
+                    </div>
+                    <button className="modal-close is-large" aria-label="close"
+                            onClick={() => {
+                                setModal("");
+                                setButtonInvoice(false)
+                            }}/>
+                </div>
+            }
+            {
+                buttonEat && <div className={`modal ${modal}`}>
+                    <div className="modal-background"/>
+                    <div className="modal-card">
+                        <header className="modal-card-head">
+                            <p className="modal-card-title">Tiempo de comida</p>
+                            <button className="delete" aria-label="close" onClick={() => {
+                                setModal("");
+                                setButtonEat(false)
+                            }}/>
+                        </header>
+                        <section className="modal-card-body">
+                            <table className="table">
+                                <thead>
+                                <tr>
+                                    <th><abbr title="at">Encargado</abbr></th>
+                                    <th><abbr title="et">Método de Pago</abbr></th>
+                                    <th><abbr title="exit">Tiempo de consumo</abbr></th>
+                                    <th><abbr title="start">Cliente</abbr></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {
+                                    eat.map((order) => {
+                                        const nodes: React.ReactNode[] = []
+                                        if (order.clientes.length === 1) {
+                                            nodes.push(<tr>
+                                                <td>{order.id_encargado}</td>
+                                                <td>{order.metodo_pago}</td>
+                                                <td>{order.tiempo}</td>
+                                                <td>{order.clientes[0].nombre.toString()}</td>
+                                            </tr>)
+                                        } else {
+                                            nodes.push(<tr>
+                                                <td rowSpan={order.clientes.length + 1}>{order.id_encargado}</td>
+                                                <td rowSpan={order.clientes.length + 1}>{order.metodo_pago}</td>
+                                                <td rowSpan={order.clientes.length + 1}>{order.tiempo}</td>
+                                                <td>{order.clientes[0].nombre.toString()}</td>
+                                            </tr>)
+                                            order.clientes.forEach(order_1 => {
+                                                nodes.push(<tr>
+                                                    <td>{order_1.nombre}</td>
+                                                </tr>)
+                                            })
+                                        }
+                                        return nodes
+                                    })
+                                }
+                                </tbody>
+                            </table>
+                            *Cuando aparece un valor negativo, es porque aún no llega a la estación
+                            del proceso
+                        </section>
+                    </div>
+                    <button className="modal-close is-large" aria-label="close"
+                            onClick={() => {
+                                setModal("");
+                                setButtonEat(false)
+                            }}/>
+                </div>
+            }
         </div>
     );
 }
