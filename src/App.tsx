@@ -248,12 +248,12 @@ function App() {
                                             </tr>)
                                         } else {
                                             nodes.push(<tr>
-                                                <td rowSpan={order.ordenes.length + 1}>{order.id}</td>
-                                                <td rowSpan={order.ordenes.length + 1}>{order.estado}</td>
+                                                <td rowSpan={order.ordenes.length}>{order.id}</td>
+                                                <td rowSpan={order.ordenes.length}>{order.estado}</td>
                                                 <td>{order.ordenes[0].nombre}</td>
                                                 <td>{order.ordenes[0].platos.toString()}</td>
                                             </tr>)
-                                            order.ordenes.forEach(order_1 => {
+                                            order.ordenes.slice(1, order.ordenes.length).forEach((order_1) => {
                                                 nodes.push(<tr>
                                                     <td>{order_1.nombre}</td>
                                                     <td>{order_1.platos.toString()}</td>
@@ -310,13 +310,13 @@ function App() {
                                             </tr>)
                                         } else {
                                             nodes.push(<tr>
-                                                <td rowSpan={order.clientes.length + 1}>{order.id_encargado}</td>
-                                                <td rowSpan={order.clientes.length + 1}>{order.id_mesa}</td>
-                                                <td rowSpan={order.clientes.length + 1}>{order.metodo_pago}</td>
-                                                <td rowSpan={order.clientes.length + 1}>{order.valor}</td>
+                                                <td rowSpan={order.clientes.length}>{order.id_encargado}</td>
+                                                <td rowSpan={order.clientes.length}>{order.id_mesa}</td>
+                                                <td rowSpan={order.clientes.length}>{order.metodo_pago}</td>
+                                                <td rowSpan={order.clientes.length}>{order.valor}</td>
                                                 <td>{order.clientes[0].nombre}</td>
                                             </tr>)
-                                            order.clientes.forEach(cliente => {
+                                            order.clientes.slice(1, order.clientes.length).forEach(cliente => {
                                                 nodes.push(<tr>
                                                     <td>{cliente.nombre}</td>
                                                 </tr>)
@@ -372,12 +372,12 @@ function App() {
                                             </tr>)
                                         } else {
                                             nodes.push(<tr>
-                                                <td rowSpan={order.clientes.length + 1}>{order.id_encargado}</td>
-                                                <td rowSpan={order.clientes.length + 1}>{order.metodo_pago}</td>
-                                                <td rowSpan={order.clientes.length + 1}>{order.tiempo}</td>
+                                                <td rowSpan={order.clientes.length}>{order.id_encargado}</td>
+                                                <td rowSpan={order.clientes.length}>{order.metodo_pago}</td>
+                                                <td rowSpan={order.clientes.length}>{order.tiempo}</td>
                                                 <td>{order.clientes[0].nombre.toString()}</td>
                                             </tr>)
-                                            order.clientes.forEach(order_1 => {
+                                            order.clientes.slice(1, order.clientes.length).forEach(order_1 => {
                                                 nodes.push(<tr>
                                                     <td>{order_1.nombre}</td>
                                                 </tr>)
