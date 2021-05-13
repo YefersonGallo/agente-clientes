@@ -9,6 +9,12 @@ function App() {
     const [tables, setTables] = useState<number>(16);
     const [menu, setMenu] = useState<number>(20);
     const [buttons, setButtons] = useState(0);
+    const [arrivals, setArrivals] = useState<Array<number>>([])
+    const [orders, setOrders] = useState<Array<{ estado: string, id: number, ordenes: Array<{ id_cliente: number, nombre: string, platos: Array<number> }> }>>([])
+    const [eat, setEat] = useState<Array<{ id_mesa: number, id_encargado: number, metodo_pago: string, hora: string, valor: number, clientes: Array<{ id_cliente: number, nombre: string, platos: Array<number> }> }>>([])
+    const [invoices, setInvoices] = useState<Array<{ id_mesa: number, id_encargado: number, metodo_pago: string, hora: string, valor: number, clientes: Array<{ id_cliente: number, nombre: string, platos: Array<number> }> }>>([])
+    const [info, setInfo] = useState<boolean>(false)
+    const [loading, setLoading] = useState<boolean>(false)
 
     const send_info = async () => {
         const requestOptions = {
@@ -24,8 +30,21 @@ function App() {
         const response = await fetch('https://agente-cliente.herokuapp.com/datos-iniciales', requestOptions)
         const res = await response.json();
         console.log(res)
+        const get_1 = await fetch('https://agente-cliente.herokuapp.com/clientes/llegada')
+        const get_2 = await fetch('https://agente-cliente.herokuapp.com/clientes/orden')
+        const get_3 = await fetch('https://agente-cliente.herokuapp.com/clientes/comer')
+        const get_4 = await fetch('https://agente-cliente.herokuapp.com/clientes/factura')
+        const res_1 = await get_1.json();
+        const res_2 = await get_2.json();
+        const res_3 = await get_3.json();
+        const res_4 = await get_4.json();
+        setArrivals(res_1)
+        setOrders(res_2)
+        setEat(res_3)
+        setInvoices(res_4)
+        setInfo(true)
+        setLoading(false)
     }
-
 
     const changeButton = (option: number) => {
         if (option === 1) {
@@ -61,16 +80,15 @@ function App() {
                             </ul>
                         </article>
                     </div>
-                    <div hidden={buttons !== 0}>
-                        <div className="tile is-child buttons">
-                            <button className="button is-primary" onClick={() => {
-                                send_info();
-                                changeButton(1)
-                            }}>Iniciar
-                            </button>
-                            <button className="button is-link" onClick={() => changeButton(2)}>Modificar Tiempos
-                            </button>
-                        </div>
+                    <div className="tile is-child buttons">
+                        <button className={loading?"button is-primary button is-loading":"button is-primary"} onClick={() => {
+                            setLoading(true)
+                            send_info();
+                            changeButton(1)
+                        }}>Iniciar
+                        </button>
+                        <button className="button is-link" onClick={() => changeButton(2)} disabled={loading}>Modificar Tiempos
+                        </button>
                     </div>
                 </div>
             </div>
@@ -83,7 +101,7 @@ function App() {
                     <div className="field-body">
                         <div className="field">
                             <div className="control">
-                                <input className="input" type="text" value={maxGroups} onChange={(e) => {
+                                <input className="input" type="text" value={maxPersons} onChange={(e) => {
                                     setMaxPersons(Number(e.target.value.toString().replace(/[^0-9]+/, '')))
                                 }}/>
                             </div>
@@ -147,6 +165,23 @@ function App() {
                         </div>
                     </div>
                 </div>
+            </div>
+            <div hidden={buttons !== 1}>
+                {
+                    info && <div className="container is-center">
+                        <h1 className="title">Resultados</h1>
+                        <div className="container tile is-parent content is-text is-multiline">
+                            <article className="tile is-child notification is-link">
+                                <ol>
+                                    <ul>Llegaron {arrivals.length} grupos de personas.</ul>
+                                    <ul>Hay {orders.length} pedidos.</ul>
+                                    <ul>Llegaron {eat.length} grupos de personas.</ul>
+                                    <ul>Llegaron {invoices.length} grupos de personas.</ul>
+                                </ol>
+                            </article>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
     );
